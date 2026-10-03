@@ -52,9 +52,7 @@ export default function ChartSection({ stock, token, liveQuote }: ChartSectionPr
         {isLoading && <div className="grid h-full place-items-center text-xs text-slate-400"><span className="animate-pulse">{t("chartLoading")}</span></div>}
         {!isLoading && error && !activeChart && <div className="grid h-full place-items-center px-5 text-center text-xs text-rose-600"><div><p>{t("chartUnavailable")}</p><button type="button" onClick={() => setRetryNonce((value) => value + 1)} className="mt-3 h-8 rounded border border-rose-200 bg-rose-50 px-3 text-[10px] font-bold text-rose-700">{t("chartRetry")}</button></div></div>}
         {!isLoading && activeChart && (
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChartView chart={activeChart} color={color} formatTimestamp={(value) => formatter.format(new Date(value * 1000))} />
-          </ResponsiveContainer>
+          <AreaChartView chart={activeChart} color={color} formatTimestamp={(value) => formatter.format(new Date(value * 1000))} />
         )}
       </div>
       <div className="mb-1 mt-2 grid grid-cols-9 gap-0.5 px-1" aria-label={t("marketData")}>
@@ -67,12 +65,14 @@ export default function ChartSection({ stock, token, liveQuote }: ChartSectionPr
 
 function AreaChartView({ chart, color, formatTimestamp }: { chart: YahooChartResponse; color: string; formatTimestamp: (value: number) => string }) {
   return (
-    <AreaChart data={chart.points} margin={{ top: 8, right: 8, left: -25, bottom: 0 }}>
-      <CartesianGrid vertical={false} stroke="#eef2f6" />
-      <XAxis dataKey="timestamp" type="number" scale="time" domain={["dataMin", "dataMax"]} tickFormatter={formatTimestamp} tick={{ fill: "#94a3b8", fontSize: 9 }} axisLine={false} tickLine={false} minTickGap={28} />
-      <YAxis domain={["auto", "auto"]} tick={{ fill: "#94a3b8", fontSize: 9 }} axisLine={false} tickLine={false} width={55} />
-      <Tooltip labelFormatter={(value) => formatTimestamp(Number(value))} formatter={(value) => [Number(value).toLocaleString(undefined, { maximumFractionDigits: 4 }), "Price"]} contentStyle={{ border: "1px solid #e2e8f0", borderRadius: 6, fontSize: 11, boxShadow: "0 8px 24px rgba(15,23,42,.08)" }} />
-      <Area dataKey="price" stroke={color} fill={color} fillOpacity={0.12} strokeWidth={2} dot={false} isAnimationActive={false} />
-    </AreaChart>
+    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+      <AreaChart data={chart.points} margin={{ top: 8, right: 8, left: -25, bottom: 0 }}>
+        <CartesianGrid vertical={false} stroke="#eef2f6" />
+        <XAxis dataKey="timestamp" type="number" scale="time" domain={["dataMin", "dataMax"]} tickFormatter={formatTimestamp} tick={{ fill: "#94a3b8", fontSize: 9 }} axisLine={false} tickLine={false} minTickGap={28} />
+        <YAxis domain={["auto", "auto"]} tick={{ fill: "#94a3b8", fontSize: 9 }} axisLine={false} tickLine={false} width={55} />
+        <Tooltip labelFormatter={(value) => formatTimestamp(Number(value))} formatter={(value) => [Number(value).toLocaleString(undefined, { maximumFractionDigits: 4 }), "Price"]} contentStyle={{ border: "1px solid #e2e8f0", borderRadius: 6, fontSize: 11, boxShadow: "0 8px 24px rgba(15,23,42,.08)" }} />
+        <Area dataKey="price" stroke={color} fill={color} fillOpacity={0.12} strokeWidth={2} dot={false} isAnimationActive={false} />
+      </AreaChart>
+    </ResponsiveContainer>
   );
 }

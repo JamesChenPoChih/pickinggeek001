@@ -3,6 +3,7 @@ import type { ChartRange, StockApiResponse, YahooChartResponse, YahooStockResult
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "/api";
 const ACCESS_KEY = "pickinggeek_access";
 const REFRESH_KEY = "pickinggeek_refresh";
+const AUTH_EXPIRED_EVENT = "pickinggeek:auth-expired";
 
 export interface AuthTokens { access: string; refresh: string }
 export type AnalysisMode = "auto" | "quick" | "deep";
@@ -11,6 +12,12 @@ export type StreamEvent =
   | { type: "token"; content: string }
   | { type: "error"; message: string }
   | { type: "done" };
+
+function expireSession() {
+  localStorage.removeItem(ACCESS_KEY);
+  localStorage.removeItem(REFRESH_KEY);
+  window.dispatchEvent(new Event(AUTH_EXPIRED_EVENT));
+}
 
 async function authorizedFetch(url: string, token: string, init: RequestInit = {}): Promise<Response> {
   const request = (access: string) => fetch(url, {
@@ -22,16 +29,23 @@ async function authorizedFetch(url: string, token: string, init: RequestInit = {
   if (response.status !== 401) return response;
 
   const refresh = localStorage.getItem(REFRESH_KEY);
-  if (!refresh) return response;
+  if (!refresh) {
+    expireSession();
+    return response;
+  }
   const refreshResponse = await fetch(`${API_BASE}/auth/token/refresh/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ refresh }),
   });
-  if (!refreshResponse.ok) return response;
+  if (!refreshResponse.ok) {
+    expireSession();
+    return response;
+  }
   const refreshed = await refreshResponse.json() as { access: string };
   localStorage.setItem(ACCESS_KEY, refreshed.access);
   response = await request(refreshed.access);
+  if (response.status === 401) expireSession();
   return response;
 }
 

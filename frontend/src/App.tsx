@@ -176,6 +176,12 @@ export default function App() {
   const [removingId, setRemovingId] = useState<number | null>(null);
   const [removeError, setRemoveError] = useState("");
 
+  useEffect(() => {
+    const handleExpiredSession = () => setToken("");
+    window.addEventListener("pickinggeek:auth-expired", handleExpiredSession);
+    return () => window.removeEventListener("pickinggeek:auth-expired", handleExpiredSession);
+  }, []);
+
   useEffect(() => { if (token) fetchStocks(token).then((rows) => { if (rows.length) { const positions = rows.map(toPosition); setStocks(positions); setSelectedId(positions[0].id); } }).catch(() => undefined); }, [token]);
   const selected = useMemo(() => stocks.find((stock) => stock.id === selectedId) ?? stocks[0], [selectedId, stocks]);
   useEffect(() => {
