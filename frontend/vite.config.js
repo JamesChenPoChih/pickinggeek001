@@ -10,6 +10,9 @@ export default defineConfig(({ command }) => ({
     emptyOutDir: true,
   },
   server: {
+    headers: {
+      "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
+    },
     proxy: {
       "/api": "http://127.0.0.1:8000",
     },

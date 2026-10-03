@@ -44,6 +44,8 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
       if (disposed || !target || !window.google) return;
       window.google.accounts.id.initialize({
         client_id: googleClientId,
+        ux_mode: "popup",
+        use_fedcm_for_button: true,
         callback: async ({ credential }) => {
           setGoogleLoading(true);
           setError("");
