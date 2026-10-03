@@ -52,7 +52,7 @@ class Command(BaseCommand):
             try:
                 response = client.chat.completions.create(
                     model=model,
-                    messages=[{"role": "user", "content": "Reply with exactly: PickingGeek ready"}],
+                    messages=[{"role": "user", "content": "Reply with exactly: Picking Geek ready"}],
                     temperature=0,
                     max_tokens=40,
                     extra_body={"chat_template_kwargs": {"enable_thinking": False}},

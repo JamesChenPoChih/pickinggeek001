@@ -14,7 +14,7 @@ class RenderDeploymentTests(TestCase):
     def test_root_reports_service_status(self):
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["service"], "PickingGeek API")
+        self.assertEqual(response.json()["service"], "Picking Geek API")
 
     def test_health_check_verifies_database(self):
         response = self.client.get("/health/")

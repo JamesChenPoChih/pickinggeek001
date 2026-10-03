@@ -1,6 +1,6 @@
-# PickingGeek / MarketPulse AI
+# Picking Geek
 
-PickingGeek 是個人 AI 投資研究 Copilot，聚焦美股與台股，將 MACD、60/100/200 日均線、每日訊號通知與 Nemotron AI 分析整合在同一個工作介面。Free 用戶最多追蹤 1 支股票，Pro 用戶可追蹤不限支數。
+Picking Geek 是個人 AI 投資研究 Copilot，聚焦美股與台股，將 MACD、60/100/200 日均線、每日訊號通知與 Nemotron AI 分析整合在同一個工作介面。Free 用戶最多追蹤 1 支股票，Pro 用戶可追蹤不限支數。
 
 > 本專案提供研究工具，不構成投資建議，也不承諾任何報酬。
 
@@ -154,20 +154,22 @@ npm run build
 
 ## Render 部署
 
-Django Web Service（建議名稱 `peekinggeek001-api`，Repository Root 保持空白）：
+Django Web Service（建議名稱 `pickinggeek001-api`，Repository Root 保持空白）：
 
 ```text
-Build Command: pip install -r requirements.txt && python backend/manage.py collectstatic --no-input && python backend/manage.py migrate
-Start Command: python -m gunicorn --chdir backend config.wsgi:application --bind 0.0.0.0:$PORT --timeout 180 --access-logfile - --error-logfile -
+Build Command: pip install -r requirements.txt && python backend/manage.py collectstatic --no-input
+Start Command: python backend/manage.py migrate && (python backend/manage.py createsuperuser --noinput || true) && python -m gunicorn --chdir backend config.wsgi:application --bind 0.0.0.0:$PORT --timeout 180 --access-logfile - --error-logfile -
 Health Check Path: /health/
 ```
 
 必要環境變數：`DJANGO_SECRET_KEY`、`DJANGO_DEBUG=false`、
-`CORS_ALLOWED_ORIGINS=https://peekinggeek001.onrender.com`、
-`CSRF_TRUSTED_ORIGINS=https://peekinggeek001.onrender.com`、`NEBIUS_API_KEY`。
+`CORS_ALLOWED_ORIGINS=https://pickinggeekai001.onrender.com`、
+`CSRF_TRUSTED_ORIGINS=https://pickinggeekai001.onrender.com`、`NEBIUS_API_KEY`。
 Render 會自動提供 `RENDER_EXTERNAL_HOSTNAME`，Django 會將它加入 `ALLOWED_HOSTS`。
 
 `DATABASE_URL` 目前可以不設定，Django 會使用 SQLite，適合先驗證部署流程；Render 的本機檔案不是永久儲存，正式保存帳號與自選股前應建立 Render PostgreSQL，並將 Internal Database URL 設為 `DATABASE_URL`。
+
+首次建立線上管理員時，在 Django Web Service 設定 `DJANGO_SUPERUSER_USERNAME`、`DJANGO_SUPERUSER_PASSWORD` 與 `DJANGO_SUPERUSER_EMAIL`。啟動命令使用 Django 內建的非互動式建立功能；帳號已存在時會略過建立並繼續啟動 Gunicorn。不要將這些值寫入 GitHub。
 
 React Static Site：
 
@@ -182,7 +184,7 @@ Publish Directory: dist
 ## Google OAuth 登入
 
 1. 在 Google Cloud Console 建立 OAuth 2.0 Client，Application type 選擇 `Web application`。
-2. Authorized JavaScript origins 加入 `http://localhost:5173` 與正式前端 `https://peekinggeekai001.onrender.com`。目前使用 Google Identity Services 的 popup callback，不需要設定 redirect URI。
+2. Authorized JavaScript origins 加入 `http://localhost:5173` 與正式前端 `https://pickinggeekai001.onrender.com`。目前使用 Google Identity Services 的 popup callback，不需要設定 redirect URI。
 3. 將同一個 Web Client ID 設定到 Django Web Service 的 `GOOGLE_OAUTH_CLIENT_ID`，以及 React Static Site 的 `VITE_GOOGLE_CLIENT_ID`。
 4. Google OAuth consent screen 若仍為 Testing，須把要登入的 Google 帳號加入 Test users。
 

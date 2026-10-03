@@ -21,6 +21,10 @@ router = DefaultRouter()
 router.register("stocks", StockViewSet, basename="stock")
 router.register("watchlist", UserStockViewSet, basename="watchlist")
 
+admin.site.site_header = "Picking Geek Administration"
+admin.site.site_title = "Picking Geek Admin"
+admin.site.index_title = "Picking Geek Management"
+
 urlpatterns = [
     path("", service_status, name="service-status"),
     path("health/", health_check, name="health-check"),

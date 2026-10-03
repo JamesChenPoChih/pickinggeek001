@@ -99,7 +99,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
             <TrendingUp size={22} aria-hidden="true" />
           </span>
           <div>
-            <p className="text-lg font-black text-slate-950">PickingGeek</p>
+            <p className="text-lg font-black text-slate-950">Picking Geek</p>
             <p className="text-xs text-slate-500">AI Investment Copilot</p>
           </div>
         </div>

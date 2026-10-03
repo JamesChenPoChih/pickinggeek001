@@ -4,7 +4,7 @@ from django.http import JsonResponse
 
 def service_status(request):
     return JsonResponse({
-        "service": "PickingGeek API",
+        "service": "Picking Geek API",
         "status": "ok",
         "api": "/api/",
         "health": "/health/",
