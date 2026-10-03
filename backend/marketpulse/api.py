@@ -22,6 +22,16 @@ from .services.llm_router import LLMRouter
 from .services.yahoo_finance import YahooFinanceError, enrich_market_assets, get_market_asset, get_price_chart, search_market_assets
 
 
+@api_view(["GET"])
+@authentication_classes([])
+@permission_classes([AllowAny])
+def google_auth_config(request):
+    return Response({
+        "enabled": bool(settings.GOOGLE_OAUTH_CLIENT_ID),
+        "client_id": settings.GOOGLE_OAUTH_CLIENT_ID,
+    })
+
+
 @api_view(["POST"])
 @authentication_classes([])
 @permission_classes([AllowAny])

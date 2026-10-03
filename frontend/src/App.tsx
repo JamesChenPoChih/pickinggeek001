@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { BarChart3, ChevronRight, ExternalLink, LoaderCircle, Search, Star, TrendingUp } from "lucide-react";
 
-import { addYahooStock, fetchStockChart, fetchStocks, removeTrackedStock, searchYahooStocks, type AuthTokens } from "./api";
+import { addYahooStock, fetchStockChart, fetchStocks, removeTrackedStock, searchYahooStocks, type AuthTokens, type AuthUser } from "./api";
 import { AIAnalysisPanel } from "./components/mobile/AIAnalysisPanel";
 import BottomNav, { type TabId } from "./components/mobile/BottomNav";
 import ChartSection from "./components/mobile/ChartSection";
@@ -15,6 +15,7 @@ import { useLanguage } from "./i18n";
 
 const ACCESS_KEY = "pickinggeek_access";
 const REFRESH_KEY = "pickinggeek_refresh";
+const USER_KEY = "pickinggeek_user";
 const POPULAR_SYMBOLS = ["VOO", "QQQ", "NVDA", "AAPL", "BTC-USD", "GC=F"];
 
 function makeChart(base: number, offset = 0): ChartPoint[] {
@@ -175,9 +176,21 @@ export default function App() {
   const [liveQuote, setLiveQuote] = useState<YahooChartResponse | null>(null);
   const [removingId, setRemovingId] = useState<number | null>(null);
   const [removeError, setRemoveError] = useState("");
+  const [authUser, setAuthUser] = useState<AuthUser | null>(() => {
+    try {
+      const stored = localStorage.getItem(USER_KEY);
+      return stored ? JSON.parse(stored) as AuthUser : null;
+    } catch {
+      return null;
+    }
+  });
 
   useEffect(() => {
-    const handleExpiredSession = () => setToken("");
+    const handleExpiredSession = () => {
+      localStorage.removeItem(USER_KEY);
+      setAuthUser(null);
+      setToken("");
+    };
     window.addEventListener("pickinggeek:auth-expired", handleExpiredSession);
     return () => window.removeEventListener("pickinggeek:auth-expired", handleExpiredSession);
   }, []);
@@ -210,10 +223,32 @@ export default function App() {
     const previous = liveQuote.previous_close ?? liveQuote.current_price;
     return { ...selected, currency: liveQuote.currency, currentPrice: liveQuote.current_price, changePercent: previous ? ((liveQuote.current_price - previous) / previous) * 100 : 0 };
   }, [liveQuote, selected]);
-  const schema: StockAppSchema = { user: { name: "Cesar Williams", handle: "cesarwilliams", tier: "PRO" }, portfolio: { title: t("myStock"), selectedStockId: selected.id, stocks } };
+  const schema: StockAppSchema = {
+    user: authUser
+      ? { name: authUser.name, handle: authUser.email, avatarUrl: authUser.avatar, tier: authUser.tier }
+      : { name: "Cesar Williams", handle: "cesarwilliams", tier: "PRO" },
+    portfolio: { title: t("myStock"), selectedStockId: selected.id, stocks },
+  };
 
-  function handleLogin(tokens: AuthTokens) { localStorage.setItem(ACCESS_KEY, tokens.access); localStorage.setItem(REFRESH_KEY, tokens.refresh); setToken(tokens.access); }
-  function logout() { localStorage.removeItem(ACCESS_KEY); localStorage.removeItem(REFRESH_KEY); setToken(""); }
+  function handleLogin(tokens: AuthTokens) {
+    localStorage.setItem(ACCESS_KEY, tokens.access);
+    localStorage.setItem(REFRESH_KEY, tokens.refresh);
+    if (tokens.user) {
+      localStorage.setItem(USER_KEY, JSON.stringify(tokens.user));
+      setAuthUser(tokens.user);
+    } else {
+      localStorage.removeItem(USER_KEY);
+      setAuthUser(null);
+    }
+    setToken(tokens.access);
+  }
+  function logout() {
+    localStorage.removeItem(ACCESS_KEY);
+    localStorage.removeItem(REFRESH_KEY);
+    localStorage.removeItem(USER_KEY);
+    setAuthUser(null);
+    setToken("");
+  }
   function openStock(stock: StockPosition) { setSelectedId(stock.id); setActiveTab("stocks"); }
   function addStock(stock: StockApiResponse) {
     setStocks((current) => current.some((item) => item.id === stock.id || item.symbol.toUpperCase() === stock.symbol.toUpperCase())

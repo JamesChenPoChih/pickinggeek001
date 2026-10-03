@@ -5,7 +5,14 @@ const ACCESS_KEY = "pickinggeek_access";
 const REFRESH_KEY = "pickinggeek_refresh";
 const AUTH_EXPIRED_EVENT = "pickinggeek:auth-expired";
 
-export interface AuthTokens { access: string; refresh: string }
+export interface AuthUser {
+  name: string;
+  email: string;
+  avatar: string;
+  tier: "FREE" | "PRO";
+}
+
+export interface AuthTokens { access: string; refresh: string; user?: AuthUser }
 export type AnalysisMode = "auto" | "quick" | "deep";
 export type StreamEvent =
   | { type: "meta"; model: string; mode: AnalysisMode }
@@ -69,6 +76,12 @@ export async function loginWithGoogle(credential: string): Promise<AuthTokens> {
     const payload = await response.json().catch(() => ({})) as { detail?: string };
     throw new Error(payload.detail || `Google sign-in responded ${response.status}`);
   }
+  return response.json();
+}
+
+export async function fetchGoogleAuthConfig(): Promise<{ enabled: boolean; client_id: string }> {
+  const response = await fetch(`${API_BASE}/auth/google/config/`);
+  if (!response.ok) throw new Error(`Google auth config responded ${response.status}`);
   return response.json();
 }
 

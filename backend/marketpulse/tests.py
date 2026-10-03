@@ -27,6 +27,14 @@ class GoogleLoginTests(TestCase):
         self.client = APIClient()
 
     @override_settings(GOOGLE_OAUTH_CLIENT_ID="web-client-id.apps.googleusercontent.com")
+    def test_google_auth_config_is_available_without_login(self):
+        response = self.client.get("/api/auth/google/config/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.data["enabled"])
+        self.assertEqual(response.data["client_id"], "web-client-id.apps.googleusercontent.com")
+
+    @override_settings(GOOGLE_OAUTH_CLIENT_ID="web-client-id.apps.googleusercontent.com")
     @patch("marketpulse.api.google_id_token.verify_oauth2_token")
     def test_google_login_creates_user_and_returns_jwt(self, verify_mock):
         verify_mock.return_value = {

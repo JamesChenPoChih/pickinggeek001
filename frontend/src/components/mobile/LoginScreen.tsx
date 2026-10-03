@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ArrowRight, LockKeyhole, TrendingUp } from "lucide-react";
 
-import { login, loginWithGoogle, type AuthTokens } from "../../api";
+import { fetchGoogleAuthConfig, login, loginWithGoogle, type AuthTokens } from "../../api";
 import { useLanguage } from "../../i18n";
 
 interface LoginScreenProps {
@@ -11,12 +11,28 @@ interface LoginScreenProps {
 export function LoginScreen({ onLogin }: LoginScreenProps) {
   const { t } = useLanguage();
   const googleButtonRef = useRef<HTMLDivElement>(null);
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
+  const buildGoogleClientId = (import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined) || "";
+  const [googleClientId, setGoogleClientId] = useState(buildGoogleClientId);
+  const [googleConfigLoading, setGoogleConfigLoading] = useState(!buildGoogleClientId);
+  const [googleConfigError, setGoogleConfigError] = useState(false);
   const [username, setUsername] = useState("demo");
   const [password, setPassword] = useState("demo1234");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+
+  useEffect(() => {
+    if (buildGoogleClientId) return;
+    let disposed = false;
+    fetchGoogleAuthConfig()
+      .then((config) => {
+        if (!disposed && config.enabled && config.client_id) setGoogleClientId(config.client_id);
+        if (!disposed && (!config.enabled || !config.client_id)) setGoogleConfigError(true);
+      })
+      .catch(() => { if (!disposed) setGoogleConfigError(true); })
+      .finally(() => { if (!disposed) setGoogleConfigLoading(false); });
+    return () => { disposed = true; };
+  }, [buildGoogleClientId]);
 
   useEffect(() => {
     if (!googleClientId) return;
@@ -109,6 +125,24 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
           <p className="mt-2 text-sm leading-6 text-slate-500">{t("loginSubtitle")}</p>
         </div>
 
+        <section aria-label={t("googleSignIn")}>
+          <p className="mb-3 text-center text-xs font-semibold text-slate-600">{t("googleSignIn")}</p>
+          {googleConfigLoading && <div className="h-11 w-full animate-pulse rounded-md bg-slate-100" />}
+          {googleClientId && (
+            <div className={googleLoading ? "pointer-events-none opacity-60" : ""}>
+              <div ref={googleButtonRef} className="flex min-h-11 w-full justify-center overflow-hidden" />
+            </div>
+          )}
+          {googleLoading && <p className="mt-2 text-center text-xs text-slate-500">{t("googleLoggingIn")}</p>}
+          {googleConfigError && !googleConfigLoading && <p className="rounded-md bg-amber-50 px-3 py-2 text-center text-xs text-amber-800">{t("googleUnavailable")}</p>}
+        </section>
+
+        <div className="my-6 flex items-center gap-3" aria-hidden="true">
+          <span className="h-px flex-1 bg-slate-200" />
+          <span className="text-[11px] font-semibold text-slate-400">{t("orUsePassword")}</span>
+          <span className="h-px flex-1 bg-slate-200" />
+        </div>
+
         <form onSubmit={submit} className="space-y-4">
           <label className="block text-xs font-semibold text-slate-600">
             {t("username")}
@@ -142,19 +176,6 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
           </button>
         </form>
 
-        {googleClientId && (
-          <div className="mt-6">
-            <div className="mb-4 flex items-center gap-3" aria-hidden="true">
-              <span className="h-px flex-1 bg-slate-200" />
-              <span className="text-[11px] font-semibold text-slate-400">{t("or")}</span>
-              <span className="h-px flex-1 bg-slate-200" />
-            </div>
-            <div className={googleLoading ? "pointer-events-none opacity-60" : ""}>
-              <div ref={googleButtonRef} className="min-h-10 w-full overflow-hidden" />
-            </div>
-            {googleLoading && <p className="mt-2 text-center text-xs text-slate-500">{t("googleLoggingIn")}</p>}
-          </div>
-        )}
       </div>
 
       <div className="mt-10 flex items-center justify-center gap-2 text-xs text-slate-400">
