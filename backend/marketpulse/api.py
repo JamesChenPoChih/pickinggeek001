@@ -86,6 +86,20 @@ class StockViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = StockSerializer
 
     def get_queryset(self):
+        if not UserStock.objects.filter(user=self.request.user).exists():
+            with transaction.atomic():
+                user = User.objects.select_for_update().get(pk=self.request.user.pk)
+                if not UserStock.objects.filter(user=user).exists():
+                    stock, _ = Stock.objects.update_or_create(
+                        symbol="NVDA",
+                        market=Stock.Market.US,
+                        defaults={
+                            "name": "NVIDIA Corporation",
+                            "currency": "USD",
+                            "is_active": True,
+                        },
+                    )
+                    UserStock.objects.get_or_create(user=user, stock=stock)
         query = Stock.objects.filter(
             is_active=True,
             followers__user=self.request.user,

@@ -15,9 +15,9 @@ export default function ChartSection({ stock, token, liveQuote }: ChartSectionPr
   const [chart, setChart] = useState<YahooChartResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [retryNonce, setRetryNonce] = useState(0);
 
   useEffect(() => {
-    if (range === "1D") { setError(false); return; }
     const controller = new AbortController();
     setLoading(true);
     setError(false);
@@ -29,10 +29,10 @@ export default function ChartSection({ stock, token, liveQuote }: ChartSectionPr
       })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, [range, stock.id, token]);
+  }, [range, retryNonce, stock.id, token]);
 
-  const activeChart = range === "1D" ? liveQuote : chart;
-  const isLoading = range === "1D" ? !liveQuote : loading;
+  const activeChart = range === "1D" ? liveQuote ?? chart : chart;
+  const isLoading = loading && !activeChart;
 
   const formatter = useMemo(() => new Intl.DateTimeFormat(language === "zh" ? "zh-TW" : "en-US", {
     ...(range === "1D" ? { hour: "2-digit", minute: "2-digit" } : range === "1W" ? { weekday: "short", hour: "2-digit" } : ["3Y", "5Y", "ALL"].includes(range) ? { year: "2-digit", month: "short" } : { month: "short", day: "numeric" }),
@@ -50,7 +50,7 @@ export default function ChartSection({ stock, token, liveQuote }: ChartSectionPr
 
       <div className="h-56 w-full" aria-label={`${stock.symbol} ${t("chartLabel")}`}>
         {isLoading && <div className="grid h-full place-items-center text-xs text-slate-400"><span className="animate-pulse">{t("chartLoading")}</span></div>}
-        {!isLoading && error && <div className="grid h-full place-items-center px-5 text-center text-xs text-rose-600">{t("chartUnavailable")}</div>}
+        {!isLoading && error && !activeChart && <div className="grid h-full place-items-center px-5 text-center text-xs text-rose-600"><div><p>{t("chartUnavailable")}</p><button type="button" onClick={() => setRetryNonce((value) => value + 1)} className="mt-3 h-8 rounded border border-rose-200 bg-rose-50 px-3 text-[10px] font-bold text-rose-700">{t("chartRetry")}</button></div></div>}
         {!isLoading && activeChart && (
           <ResponsiveContainer width="100%" height="100%">
             <AreaChartView chart={activeChart} color={color} formatTimestamp={(value) => formatter.format(new Date(value * 1000))} />

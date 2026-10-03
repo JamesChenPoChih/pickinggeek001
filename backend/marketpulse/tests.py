@@ -11,8 +11,8 @@ from .services.llm_router import LLMRouter, NANO_MODEL, ULTRA_MODEL
 
 
 class RenderDeploymentTests(TestCase):
-    def test_root_reports_service_status(self):
-        response = self.client.get("/")
+    def test_api_status_reports_service_status(self):
+        response = self.client.get("/api/status/")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["service"], "Picking Geek API")
 
@@ -145,6 +145,13 @@ class YahooStockSearchTests(TestCase):
         response = self.client.get("/api/stocks/search/", {"q": ""})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, {"results": []})
+
+    def test_stock_list_creates_default_watchlist_for_new_user(self):
+        response = self.client.get("/api/stocks/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual([item["symbol"] for item in response.data], ["NVDA"])
+        self.assertTrue(UserStock.objects.filter(user=self.user, stock__symbol="NVDA").exists())
 
     @patch("marketpulse.api.get_price_chart")
     def test_stock_chart_returns_yahoo_prices(self, chart_mock):
