@@ -1,26 +1,10 @@
 services:
   - type: web
     name: pickinggeek0001
-    runtime: static
-    autoDeployTrigger: commit
-    buildCommand: cd frontend && npm ci && npm run build
-    staticPublishPath: ./frontend/dist
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
-    envVars:
-      - key: VITE_API_BASE_URL
-        value: https://pickinggeek001-api.onrender.com/api
-      - key: VITE_GOOGLE_CLIENT_ID
-        sync: false
-
-  - type: web
-    name: pickinggeek001-api
     runtime: python
     plan: free
     autoDeployTrigger: commit
-    buildCommand: pip install -r requirements.txt && python backend/manage.py collectstatic --no-input
+    buildCommand: pip install -r requirements.txt && cd frontend && npm ci && npm run build && cd .. && python backend/manage.py collectstatic --no-input
     startCommand: python backend/manage.py migrate && (python backend/manage.py createsuperuser --noinput || true) && python -m gunicorn --chdir backend config.wsgi:application --bind 0.0.0.0:$PORT --timeout 180 --access-logfile - --error-logfile -
     healthCheckPath: /health/
     envVars:
@@ -39,6 +23,8 @@ services:
       - key: CSRF_TRUSTED_ORIGINS
         value: https://pickinggeek0001.onrender.com
       - key: GOOGLE_OAUTH_CLIENT_ID
+        sync: false
+      - key: VITE_GOOGLE_CLIENT_ID
         sync: false
       - key: NEBIUS_API_KEY
         sync: false

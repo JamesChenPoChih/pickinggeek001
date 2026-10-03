@@ -6,6 +6,7 @@ __pycache__/
 db.sqlite3
 node_modules/
 frontend/.npm-cache/
+backend/frontend_dist/
 dist/
 staticfiles/
 .pytest_cache/

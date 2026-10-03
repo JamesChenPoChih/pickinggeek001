@@ -1,6 +1,6 @@
 import type { ChartRange, StockApiResponse, YahooChartResponse, YahooStockResult } from "./types/stock";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "/api";
 const ACCESS_KEY = "pickinggeek_access";
 const REFRESH_KEY = "pickinggeek_refresh";
 
